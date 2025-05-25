@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import json
 import io
@@ -192,13 +190,11 @@ def show_contract_analyzer():
                     st.success("• Telemedicine reimbursement included")
                     
                     st.subheader("📈 Financial Impact")
-                    revenue_data = {
+                    revenue_data = pd.DataFrame({
                         'Category': ['Base Payments', 'Quality Bonuses', 'Shared Savings', 'Total Potential'],
                         'Annual Value': [180000, 15000, 8000, 203000]
-                    }
-                    fig = px.bar(revenue_data, x='Category', y='Annual Value', 
-                               title="Projected Annual Revenue")
-                    st.plotly_chart(fig, use_container_width=True)
+                    })
+                    st.bar_chart(revenue_data.set_index('Category'))
                 
                 st.subheader("📋 Action Items")
                 st.markdown("""
@@ -285,17 +281,19 @@ def show_revenue_simulator():
         st.subheader("📈 Revenue Projections")
         
         # Monthly revenue chart
-        fig1 = go.Figure()
-        fig1.add_trace(go.Bar(name='Base Revenue', x=months, y=base_revenue))
-        fig1.add_trace(go.Bar(name='Quality Bonus', x=months, y=bonus_revenue))
-        fig1.update_layout(title='Monthly Revenue Breakdown', barmode='stack')
-        st.plotly_chart(fig1, use_container_width=True)
+        chart_data = pd.DataFrame({
+            'Month': months,
+            'Base Revenue': base_revenue,
+            'Quality Bonus': bonus_revenue
+        })
+        st.bar_chart(chart_data.set_index('Month'))
         
         # Cumulative revenue
-        fig2 = px.line(x=months, y=cumulative_revenue, 
-                      title='Cumulative Revenue Growth',
-                      labels={'x': 'Month', 'y': 'Cumulative Revenue ($)'})
-        st.plotly_chart(fig2, use_container_width=True)
+        cumulative_data = pd.DataFrame({
+            'Month': months,
+            'Cumulative Revenue': cumulative_revenue
+        })
+        st.line_chart(cumulative_data.set_index('Month'))
         
         # Scenario comparison table
         st.subheader("📋 Scenario Summary")
@@ -358,16 +356,14 @@ def show_lifecycle_tracker():
     with col1:
         # Status distribution
         status_counts = df['Status'].value_counts()
-        fig1 = px.pie(values=status_counts.values, names=status_counts.index, 
-                     title="Contract Status Distribution")
-        st.plotly_chart(fig1, use_container_width=True)
+        st.subheader("Contract Status Distribution")
+        st.bar_chart(status_counts)
     
     with col2:
         # Revenue by payer
-        fig2 = px.bar(df, x='Payer', y='Monthly Revenue', 
-                     title="Monthly Revenue by Payer",
-                     color='Risk Level')
-        st.plotly_chart(fig2, use_container_width=True)
+        revenue_by_payer = df.groupby('Payer')['Monthly Revenue'].sum()
+        st.subheader("Monthly Revenue by Payer")
+        st.bar_chart(revenue_by_payer)
     
     # Detailed contract table
     st.subheader("📋 Contract Details")
